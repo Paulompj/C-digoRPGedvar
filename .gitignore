@@ -1,52 +1,959 @@
-# Prerequisites
-*.d
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <locale.h>
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+//Função para calcular o dano das espadas
+int danoEspadas(int espada) 
+{
+    if (espada == 0)
+    {
+        printf("Você não possui espada.\n");
+        return 0;
+    } 
+    else if (espada == 2)
+        return rand() % 2 + 1; //Espada Simples (1-2)
+        
+    else if (espada == 5)
+        return rand() % 4 + 2; //Espada mediana (2-5)
+        
+    else if (espada== 9)
+        return rand() % 5 + 5; //Espada avançada (4-9)
+}
 
-# Linker output
-*.ilk
-*.map
-*.exp
+//Função geral para as batalhas
+void batalha(int *pocao_vida, int *vida, int forca, int espada, int resistencia, int vida_max, int habilidade, int tipoBatalha, int *loot_slimes, int *loot_orcs) 
+{
+    int i;
+    int escolha;
+    int numeroSlimes;
+    int numeroOrcs;
+    
+    if (tipoBatalha==1) //Função de batalha pra slimes
+    {
+       do //Loop para achar um local entre 1-4 slimes 
+       {
+            numeroSlimes= rand() % 4 + 1;    //Gera entre 1 a 4 Slimes em um local
+            printf("\nVocê encontra %d Slimes neste local. Deseja confronta-los? ",numeroSlimes);
+            printf("\n1- pronto para um confronto!");
+            printf("\n2- Procurar em outra área");
+            printf("\nEscolha: ");
+            scanf("%d",&escolha); 
+       }while(escolha!=1);
+       
+        for(i=1;i<=numeroSlimes;i++) //Batalha contra todos os Slimes
+        {   
+            if(*vida<=0) //Caso o player morra, o jogo acaba.
+            {
+                printf("Você morreu para o(s) Slime(s)");
+                exit(0);
+            }
+            int vida_slime=6;
+            int dano_slime=5;
+            
+            do //Batalha com um slime de cada vez.
+            {
+                if(*vida<=0) //Caso o player morra, o jogo acaba.
+                {
+                    printf("Você morreu para o(s) Slime(s)");
+                    exit(0);
+                }
+                
+                printf("\n//Slime %d: hp=%d   //  aventureiro: hp=%d",i,vida_slime,*vida);
+                printf("\n1- Ataque de espada");
+                printf("\n2- Ataque corpo a corpo");
+                printf("\n3- Usar poção de vida (%d)",*pocao_vida);
+                printf("\nEscolha: ");
+                scanf("%d",&escolha); 
+                
+                if(escolha==1)
+                {
+                    int dano=danoEspadas(espada); //chama a funcao do dano de espada.
+                    if(dano!=0)
+                    {
+                        vida_slime=vida_slime-(dano+habilidade); //retira a vida do slime.
 
-# Precompiled Headers
-*.gch
-*.pch
+                        if(vida_slime>0) //se o slime não morrer com o ataque, o jogador leva dano do slime.
+                            *vida=*vida - dano_slime + resistencia;
+                    }
+                }
+                if(escolha==2)
+                {
+                    vida_slime=vida_slime-forca; //dano corpo a corpo.
+                        
+                    if(vida_slime>0) //se o slime não morrer com o ataque, o jogador leva dano do slime.
+                        *vida=*vida - dano_slime + resistencia;
+                                     
+                }
+                if(escolha==3)
+                {
+                    if(*pocao_vida<=0) //Se o jogador nao tiver poção.
+                        printf("Você não possui poção de vida.\n");
+                    
+                    else //Jogador usa poção.
+                    {
+                        *vida=vida_max;
+                        *pocao_vida= *pocao_vida - 1;
+                    }
+                }
+                
+            }while(vida_slime>0); //Quando um slime morre, joga para o próximo ou acaba o loop.
+        }
+    
+    *loot_slimes= *loot_slimes + numeroSlimes; // Para cada slime morto, o jogador ganha um loot de slime.
+    printf("Parabéns! Você conseguiu %d núcleo(s) de slime\n",*loot_slimes);
+    }
+    
+    else if (tipoBatalha==2) //Função de batalha para Orcs
+    {
+        do //Loop para achar um local entre 1-2 Orcs 
+        {
+            numeroOrcs= rand() % 2 + 1;    //Gera entre 1 a 2 Orcs em um local
+            printf("\nVocê encontra %d Orcs neste local. Deseja confronta-los? ",numeroOrcs);
+            printf("\n1- pronto para um confronto!");
+            printf("\n2- Procurar em outra área");
+            printf("\nEscolha: ");
+            scanf("%d",&escolha); 
+            
+        }while(escolha!=1);
+       
+        for(i=1;i<=numeroOrcs;i++) //Batalha contra todos os Orcs
+        {   
+            if(*vida<=0) //Caso o player morra, o jogo acaba.
+            {
+                break;
+            }
+            int vida_orc=25;
+            int dano_orc=8;
+            
+            do //Batalha com um Orc de cada vez.
+            {
+                if(*vida<=0) //Caso o player morra, o jogo acaba.
+                {
+                    printf("Você morreu para o(s) orc(s)");
+                    exit(0);
+                }
+                
+                printf("\n//Orc %d: hp=%d   //  aventureiro: hp=%d",i,vida_orc,*vida);
+                printf("\n1- Ataque de espada");
+                printf("\n2- Ataque corpo a corpo");
+                printf("\n3- Usar poção de vida (%d)",*pocao_vida);
+                printf("\nEscolha: ");
+                scanf("%d",&escolha); 
+                
+                if(escolha==1)
+                {
+                    int dano=danoEspadas(espada); //chama a funcao do dano de espada.
+                    if(dano!=0)
+                    {
+                        vida_orc=vida_orc-(dano+habilidade); //retira a vida do orc.
+                        
+                        if(vida_orc>0) //se o orc não morrer com o ataque, o jogador leva dano.
+                            *vida=*vida - dano_orc + resistencia;
+                    }
+                }
+                if(escolha==2)
+                {
+                    vida_orc=vida_orc-forca;//dano corpo a corpo.
+                        
+                    if(vida_orc>0) //se o orc não morrer com o ataque, o jogador leva dano.
+                        *vida=*vida - dano_orc + resistencia;
+                                     
+                }
+                if(escolha==3)
+                {
+                    if(*pocao_vida<=0) //Se o jogador nao tiver poção.
+                        printf("Você não possui poção de vida.\n");
+                    
+                    else //Jogador usa poção.
+                    {
+                        *vida=vida_max;
+                        *pocao_vida=*pocao_vida - 1;
+                        
+                    }
+                }
+                
+            }while(vida_orc>0); //Quando um orc morre, joga para o próximo ou acaba o loop.
+            
+            
+        }
+      
+    *loot_orcs= *loot_orcs + numeroOrcs; // Para cada orc morto, o jogador ganha um loot de orc.
+    printf("Parabéns! Você conseguiu %d peles de Orc\n",*loot_orcs);
+    }
+}
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+void Loja(int *moeda, int *pocao_vida, int *espada, int *resistencia, int *loot_slime, int *loot_orc) 
+{
+    int escolha;
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+    do //Escolha de uma interação com o vendedor
+    {
+        printf("\nVocê possui %d Grounds.", *moeda);
+        printf("\n1- poção de vida.(cura a vida em 100%%)    G$ 5 (%d)", *pocao_vida);
+        printf("\n2- espada mediana.(2 a 5 de dano físico)  G$ %d", 20 - *espada);
+        printf("\n3- espada avançada.(5 a 9 de dano físico) G$ %d", 30 - *espada);
+        printf("\n4- Armadura.(+2 de resistência)           G$ 20");
+        printf("\n5- Vender Itens de Monstros.");
+        printf("\n6- Sair.");
+        printf("\nEscolha: ");
+        scanf("%d", &escolha);
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+        if (escolha == 1) //Escolha para poção de vida
+        {
+            if (*pocao_vida == 3) //Se tiver 3 poções de vida, não é possível carregar mais
+                printf("Vendedor: Você não tem espaço pra esse item.\n");
+                
+            else if (*moeda < 5) //Se não tiver Dinheiro
+                printf("Vendedor: Você não tem dinheiro suficiente.\n");
+                
+            else //Compra da poção
+            {
+                *moeda = *moeda - 5;
+                (*pocao_vida)++;
+                printf("Vendedor: Obrigado pela compra!\n");
+            }
+        }
+        
+        else if (escolha == 2) //Escolha de comprar espada mediana
+        {
+            if (*moeda < 20 - *espada) //O preço da espada é dado a partir do preço normal menos o valor de dano máximo da sua espada atual
+                printf("Vendedor: Você não tem dinheiro suficiente.\n");
+                
+            else if(*espada==5) //Se já tiver a espada mediana
+                printf("Vendedor: Você já possui essa espada\n");
+                
+            else //Compra da espada
+            {
+                *moeda = *moeda - (20 - *espada);
+                *espada = 5;
+                printf("Vendedor: Obrigado pela compra!\n");
+            }
+        }
+        
+        else if (escolha == 3) //Escolha de comprar espada avançada
+        {
+            if (*moeda < 30 - *espada) //O preço da espada é dado a partir do preço normal menos o valor de dano máximo da sua espada atual
+                printf("Vendedor: Você não tem dinheiro suficiente.\n");
+                
+            else if(*espada==9) //Se já tiver a espada avançada
+                printf("Vendedor: Você já possui essa espada\n");                
+                
+            else //compra da espada avançada
+            {
+                *moeda = *moeda - (30 - *espada);
+                *espada = 9;
+                printf("Vendedor: Obrigado pela compra!\n");
+            }
+        }
+        
+        else if (escolha == 4) //Escolha de comprar uma armadura
+        {
+            if (*moeda < 20) //Se não tiver dinheiro
+                printf("Vendedor: Você não tem dinheiro suficiente.\n");
+                
+            else if (*resistencia > 2) // Se já possuir a armadura
+                printf("Vendedor: Você ja possui esse item.\n");
+                
+            else //Compra da armadura
+            {
+                *moeda = *moeda - 20;
+                *resistencia = *resistencia + 2;
+                printf("Vendedor: Obrigado pela compra!\n");
+            }
+        }
+        
+        else if (escolha == 5) //Vender itens
+        {
+            if (*loot_slime > 0 || *loot_orc > 0)//Vende todos os itens que o herói possui no inventário
+            {
+                *moeda = *moeda + (5 * *loot_slime) + (15 * *loot_orc);
+                printf("Vendedor: Obrigado, esses itens me ajudarão!\n");
+                *loot_slime = 0;
+                *loot_orc = 0;
+            }
+            else //Se ele não tiver itens no invantário
+                printf("Vendedor: Você não possui itens para vender!\n");
+        }
+    } while (escolha != 6); //Sair da loja
+     printf("Vendedor: Obrigado, volte sempre!\n");
+}
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+void explorar(int *moeda, int *pocao_vida, int *espada, int *resistencia, int *loot_slime, int *loot_orc) 
+{
+    int escolha;
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+    printf("Enquanto continuava sua jornada pela cidade medieval, você depara com uma cena\n");
+    printf("mágica e intrigante: uma fonte de desejos, adornada com musgo e enfeitada com \npequenas pedras brilhantes que");
+    printf("refletem a luz dourada do sol.A água da fonte flui suavemente,\ncriando um som relaxante que ecoa pela clareira.\n \nDiante disso, você deseja jogar uma ground e fazer um desejo?");
+    printf("\n1- Sim. (1 G$)");
+    printf("\n2- Não.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolhe se quer jogar uma moeda na fonte
+            
+    switch (escolha) 
+    {
+        case 1:
+            if(*moeda<1) //Se o jogador não possuir dinheiro suficiente
+                printf("Você não possui grounds.");
+                      
+            else //Jogar a moeda
+            {
+                *moeda=*moeda - 1;
+                printf("Você jogou uma ground e fez um desejo. Agora, com seu desejo lançado, você aguarda,\npensando nas possibilidades que podem se desdobrar. Depois disso, você seguiu em frente pela cidade.\n");
+            }
+            break;
+                    
+        case 2: //Jogador decidiu não jogar a moeda
+            printf("Você seguiu andando.\n");
+            break;
+                    
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+            
+    printf("\nAgora, o aventureiro encontrou uma loja misteriosa. A loja oferece artefatos e poções\nque podem aprimorar os armamentos dos guerreiros.\n \nVocê deseja visitar a loja?");    
+    printf("\n1- Sim.");
+    printf("\n2- Não.");
+    printf("\nEscolha: ");
+    scanf("%d",&escolha); //Esclhe se o jogador quer entrar na loja
+    
+     switch (escolha) 
+    {
+        case 1:
+            Loja(&*moeda, &*pocao_vida, &*espada, &*resistencia, &*loot_slime, &*loot_orc); //Chama a função Loja com os itens atuais
+            break;
+                    
+        case 2: //Jogador decidiu não entrar na loja
+            printf("Você seguiu andando.\n");
+            break;
+                    
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+}
+
+void fazendeiros(int *moeda, int *pocao_vida, int *loot_orc, int *loot_slime, int *espada)
+{
+    int confirm;
+    int escolha;
+    
+    printf("Depois de aceitar o convite dos fazendeiros, você segue até a casa do líder deles. \n");
+    printf("Sentados ao redor de uma grande mesa de madeira desgastada, você e alguns integrantes do grupo compartilham\nhistórias sobre a cidade decadente e seus respectivos objetivos. ");
+    printf("Você descreve sua missão \nde enfrentar o Dragão e restaurar a antiga glória da região, enquanto o líder\ncompartilha a luta constante de sua comunidade contra a decadência e a insegurança da cidade.\n");
+    printf("A conversa flui de maneira natural, e, à medida que a noite avança, os fazendeiros expressam \nseu desejo de ajudar. Com um gesto amigável, eles pedem que você escolha um item para te ajudar na viagem.\n");
+    printf("\nEscolha um desses itens:");
+    
+    do
+    {
+        printf("\n1- sete Grounds.");
+        printf("\n2- Uma poção de vida. (%d)",*pocao_vida);
+        printf("\nEscolha: ");
+        scanf("%d", &escolha); //Você precisa escolher entre um dos presentes
+        
+        if(escolha==1) //Escolha de Grounds
+        {
+            printf("Você: Obrigado pela Ajuda\n");
+            *moeda=*moeda + 7;
+            confirm=1;
+        }
+        else if(escolha==2) //Escolha de poção
+        {
+            if(*pocao_vida>=3) //Se não tiver espaço
+                printf("Você não possui espaço suficiente.\n");
+            else
+            {
+                *pocao_vida=*pocao_vida + 1;
+                printf("Você: Obrigado pela Ajuda\n");
+                confirm=1;
+            }
+                    
+        }
+    }while(confirm!=1); //Só sai desse loop quando você pegar um dos dois itens
+    
+    
+    printf("\nCom profunda gratidão, os fazendeiros compartilham a existência de um atalho\nseguro que percorre o subsolo, levando diretamente ao final das montanhas.\n \nO que você deseja fazer?");
+    printf("\n1- Seguir pelo atalho.");
+    printf("\n2- recusar e seguir o caminho pela cidade.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //escolhe se vai seguir o atalho ou não
+    
+    switch(escolha)
+    {
+        
+            case 1: // se seguir o atalho
+            printf("Seguindo o atalho subterrâneo, você se encontrou rapidamente perto saída da cidade.\nNo entanto, ainda será necessário subir mais para sair da região montanhosa.\n");
+            break;
+        
+        case 2: //se não seguir o atalho
+            printf("Você recusa o convite do fazendeiro e decide continuar sua jornada. À medida que você segue \nadiante, as ruas silenciosas da cidade decadente revelam sua verdadeira natureza. A falta de \nvida e atividade nas ruas é substituída por uma sensação inquietante de isolamento. ");
+            printf("Você enfrenta \nos desafios iminentes por conta própria. O perigo e os mistérios espreitam em cada esquina.\n \nAté que, inesperadamente, um bando de ladrões que estava à espreita o aborda,\nlevando todos os seus pertences, deixando apenas as roupas que você vestia.\n");
+            printf("Porém, mesmo após o assalto, você continua determinado a atingir seu objetivo, então,\nvocê consegue sair da cidade, mas ainda precisa caminhar até o final das montanhas.\n");
+            //Perde todos os seus itens, menos o que está vestindo para os bandidos.
+            *espada=0;
+            *moeda=0;
+            *pocao_vida=0;
+            *loot_slime=0;
+            *loot_orc=0;
+            break;
+        
+        default:
+            printf("\nEscolha inválida.\n");
+            break;
+    
+    }
+    
+}
+void montanha()
+{
+    printf("\nO terreno acidentado e as pedras soltas conspiraram contra você. Em um momento de desequilíbrio, \nvocê perdeu o controle e começou a escorregar perigosamente pela encosta íngreme. ");
+    printf("Com o coração batendo\ndescontroladamente, você lutou desesperadamente para se segurar, mas a gravidade implacável o venceu.\n");
+    printf("Seu corpo despencou das alturas, e a sensação de queda livre tomou conta de você. O impacto foi inevitável e cruel.\n");
+}
+
+void comprar_bebida()
+{
+    printf("\nApós decidir comprar a bebida do mendigo, você aceita o cântaro e toma um gole.O líquido desce pela garganta,\nrevelando um gosto inicialmente agradável, mas logo se torna amargo e metálico. ");
+    printf("O mendigo observa com um sorriso \nmalicioso enquanto você começa a sentir os efeitos do veneno se espalhando rapidamente por seu corpo.\nA dor e o desespero tomam conta de você, e cada respiração torna-se uma luta agonizante.\n");
+    printf("Em sua visão turva, você observa o mendigo rapidamente vasculhar seus pertences, \nroubando o que restava de seus recursos. Com um último suspiro, você cai ao chão, \ncompletamente indefeso, envenenado pela bebida que deveria ter sido um gesto de generosidade.\n");
+}
+
+int main() 
+{
+    int escolha;
+    int moeda=15;
+    int pocao_vida = 0;
+    int espada = 0;
+    int resistencia = 0;
+    int vida_max = 0;
+    int vida = 0;
+    int i;
+    int forca=0;
+    int habilidade=0;
+    int loot_orc = 0;
+    int loot_slime = 0;
+    int tipoBatalha=0;
+    setlocale(LC_ALL,"PORTUGUESE");
+    
+    // Inicializa a semente para a função rand() usando o tempo atual
+    srand(time(NULL));
+    
+    printf("Contexto:\n");//Contexto
+    printf("\nVocê é um aventureiro na época medieval que ouviu falar de um Dragão que anda aterrorizando\nas bandas de heimer, uma região conhecida por ser por ser uma antiga região próspera, mas\nque agora vem se tornando despovoada por conta dos constantes ataques do Dragão. Visando\nrecuperar aquela região e se tornar um herói você parte para a aventura apenas com força,\ncoragem e as técnicas que você aprendeu durante sua vida. \n");
+
+    printf("\nPara chegar ao local desejado, você tinha 25 moedas,(Grounds), que haviam em seus bolsos. Após pagar\no Transporte, uma carroagem Simples, lhe sobraram 15 grounds. \n");
+   
+    printf("\nEstanho: Oi, desculpa me intrometer na sua viagem. Eu sei que não é da minha conta, mas\nvocê não parece um plebeu. O que você é?\n");
+   
+    //Escolha de Classe
+    printf("\n___ESCOLHA DA CLASSE___\n");
+    printf("    Espadashim:                      Bárbaro:\n    VIDA MÁXIMA:22                   VIDA MÁXIMA:30\n    FORÇA:2                          FORÇA:5\n    MAESTRIA COM ESPADAS:2           MAESTRIA COM ESPADAS:1\n    RESISTÊNCIA:2                    RESISTÊNCIA:1\n");
+   
+    printf("\n(Analise os Status e escolha a classe do seu herói)");
+    printf("\n1- Espadashim");
+    printf("\n2- Bárbaro");
+    
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha de Classe
+
+    switch (escolha) { //Escolha de Classe
+        case 1:
+           vida_max=22;
+           vida=22;
+           forca=2;
+           habilidade=2;
+           resistencia=2;
+           printf("Olha que legal, há tempos que nao vejo um espadashim! Me chamo Aldo, sou um antigo morador\ndessa cidade, como você já deve ter ouvido falar, é muito perigoso por aqui.\n \nAldo: Quer saber mais sobre a cidade antes de continuar sua trajetória?");
+            break;
+            
+        case 2:
+           vida_max =30;
+           vida=30;
+           forca=5;
+           habilidade=1;
+           resistencia=1;
+           printf("Olha que legal, há tempos que nao vejo um bárbaro! Me chamo Aldo, sou um antigo morador\ndessa cidade, como você já deve ter ouvido falar, é muito perigoso por aqui.\n \nAldo: Quer saber mais sobre a cidade antes de continuar sua trajetória?");
+            break;
+            
+        default:
+            printf("Escolha inválida.\n");
+            return 1; // Sai do programa com erro
+    }
+
+    printf("\n1- Sim");
+    printf("\n2- Não");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha se o herói quer saber mais sobre a cidade
+    
+    switch(escolha){//Escolha se o herói quer saber mais sobre a cidade
+    
+        case 1:
+            espada=2;
+            printf("Aldo: Imaginei que você fosse querer saber mais mesmo, apesar de um pouco abandonada,\nesse território ainda possui bons comerciantes, tente visitar alguns, eles possuem preços justos para as armas.\nAlém disso, tente caçar os montros da floresta, os lojistas trocam os núcleos de slime e peles de orcs por preços muito bons.\nBasicamente é isso. Desculpe por tagarelar tanto, faz tempo que não conversocom ninguém.\nInreressante, você é um guerreiro e não estou vendo nenhuma arma, eu vou te dar essa espada antiga,\nela não é muita coisa mas você definitivamente vai fazer um uso melhor dela do que eu.\nTchau tchau estrangeiro.\n");
+            printf("\n---------PARABÉNS VOCÊ GANHOU UMA ESPADA---------(Dano: 1-2)\n");
+            printf("\nAldo: Amigo, nao querendo incomodalo, ja esta tarde.\n\nAldo: Como você vai passar a noite?");
+            break;
+            
+        case 2:
+            printf("Aldo: Tudo bem então, boa viagem. Mas, nao querendo incomodalo, ja esta tarde.\n \nAldo: Como você vai passar a noite?");
+            break;
+            
+        default:
+            printf("ESCOLHA INVÁLIDA.\n");
+            return 0;
+    }
+    
+    printf("\nVocê possui %d Grounds.",moeda);
+    printf("\n1- Dormir na rua.                       G$ 0.");
+    printf("\n2- Dormir em um alojamento deteriorado. G$ 5.");
+    printf("\n3- Dormir em uma pousada modesta.       G$ 10).\n");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha do local onde o herói vai dormir no primeiro dia
+    
+    switch (escolha) { //Escolha do local onde o herói vai dormir no primeiro dia
+        case 1:
+            printf("O frio cortante e o chão de pedra fizeram você tremer a noite toda.\nFinalmente, ao amanhecer, você percebeu que tinha sido furtado enquanto dormia e perdeu\ntodo o seu dinheiro que tinha, mas ainda estava determinado. Segue viagem");
+            moeda=0;
+            if(espada==2)
+                printf("Por sorte, os malfeitores nao levaram a sua espada.");
+            break;
+            
+        case 2:
+            printf("No alojamento deteriorado, a noite estava inquieta. O local mostrava sinais de negligência,\ne a cama desconfortável não proporcionava um sono repousante. No meio da noite,\num estrondo repentino fez com que o teto desabasse. O pânico tomou conta quando destroços caíram,\nprendendo você e outras pessoas que buscavam refúgio. A escuridão e a falta de ar eram opressivas,\ne, infelizmente, a situação se tornou fatal e todos no alojamento morreram, inclusive você.");
+            printf("\n----------GAME OVER----------");
+            exit(0);
+            break;
+            
+        case 3:
+            printf("Na pousada modesta, a cama confortável e o quarto limpo proporcionaram uma noite tranquila e revigorante.\nO calor da lareira e o aroma de comida caseira criaram um ambiente acolhedor e reconfortante,\npermitindo que você descansasse com serenidade.\n");
+            moeda=moeda - 10;
+            break;
+            
+        default:
+            printf("Escolha inválida.\n");
+            return 1; // Sai do programa com erro
+    }
+    
+    //Fim do 1 dia
+    
+    printf("\n\n____________________DIA 2____________________\n\n");
+
+    printf("Após o descanso, você acorda. O que deseja fazer agora?\n");
+    printf("1- Explorar a cidade\n");
+    printf("2- Sair da cidade e seguir caminho até o boss\n");
+    printf("Escolha: ");
+    scanf("%d",&escolha); //Escolha O que você deseja fazer após acordar
+    
+    switch (escolha) //Escolha O que você deseja fazer após acordar
+    {
+        case 1:
+            explorar(&moeda, &pocao_vida, &espada, &resistencia, &loot_slime, &loot_orc); //chama a função explorar, que tem o que acontece enquanto o personagem explora a cidade.
+            printf("\nVocê acabou de explorar a cidade e seguiu caminho pela floresta até o boss.\n");
+            break;
+            
+        case 2:
+            printf("Você seguiu caminho pela floresta até o boss\n");
+            break;
+            
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+    
+
+
+  
+    printf("\nCaminhando pela densa floresta por algumas horas, você depara com uma placa simples que diz: 'Slimes nesta área'.\n\nVocê deseja caçar slimes?");
+    printf("\n1- Sim.");
+    printf("\n2- Não.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha se o personagem vai querer lutar contra slimes
+
+    switch (escolha) {//Escolha se o personagem vai querer lutar contra slimes
+        case 1:
+            tipoBatalha=1;
+            batalha(&pocao_vida , &vida, forca, espada, resistencia, vida_max, habilidade, tipoBatalha,&loot_slime, &loot_orc); //chama a função batalha
+            break;
+        case 2:
+            printf("Você continuou a viagem, buscando evitar qualquer confronto com essas criaturas temíveis,\npriorizando sua própria segurança em sua jornada pela floresta medieval.\n");
+            break;
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+    
+    printf("\nEnquanto continua sua jornada pela floresta, você começa a perceber um aroma agradável no ar.\nCurioso, você segue o cheiro e logo se depara com um pequeno clarão entre as árvores. \nAo se aproximar, você descobre um vendedor ambulante, cuja carroça está repleta de mercadorias variadas.\n\nVocê deseja interagir com o vendedor?");
+    printf("\n1- Sim.");
+    printf("\n2- Não.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha se o personagem deseja interajir com o vendedor ambulante
+
+    switch (escolha) { //Escolha se o personagem deseja interajir com o vendedor ambulante
+        case 1:
+            Loja(&moeda, &pocao_vida, &espada, &resistencia, &loot_slime, &loot_orc); //Chama a função loja
+            break;
+        case 2:
+            printf("Você seguiu a viagem.\n");
+            break;
+        default:
+            printf("Escolha inválida\n");
+    }
+
+    printf("\nVocê continua sua jornada pela densa floresta, passando horas caminhando sob a sombra das árvores antigas,\nseus sentidos permanecem alertas. O chilrear dos pássaros e o murmúrio das folhas ao vento criam uma trilha\nsonora natural para sua jornada. No entanto, à medida que avança, você se depara com algo que\nfaz com que seu coração acelere.\nUma placa simples, cravada no solo e coberta parcialmente por musgo, chama sua atenção.\nNela, estão gravadas palavras em letras ásperas e rústicas: Cuidado, orcs nesta área.\nUm calafrio percorre sua espinha, pois você sabe que os orcs são criaturas temíveis e impiedosas.\n\nVocê deseja caçar Orcs?");
+    printf("\n1- Enfrentar os Orcs.");
+    printf("\n2- Desviar caminho e seguir viagem.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha se o Personagem deseja enfrentar Orcs
+    
+    switch (escolha) {//Escolha se o Personagem deseja enfrentar Orcs
+        case 1:
+            tipoBatalha=2;
+            batalha(&pocao_vida , &vida, forca, espada, resistencia, vida_max, habilidade, tipoBatalha,&loot_slime, &loot_orc); //chama a função batalha
+            break;
+            
+        case 2:
+             printf("Você continuou a viagem, buscando evitar qualquer confronto com essas criaturas temíveis,\npriorizando sua própria segurança em sua jornada pela floresta medieval.\n");
+            break;
+            
+        default:
+            printf("Escolha inválida\n");
+            break;
+    }
+
+    printf("\nConforme a noite se aproxima e o cansaço da jornada se faz sentir,\nvocê se depara com a necessidade de encontrar um lugar para passar a noite.\nAs sombras da floresta se alongam e a escuridão começa a envolver\na paisagem, tornando a situação mais desafiadora.\n \nDiante disso, como você vai passar a noite?");
+    printf("\n1- Deitar e dormir no meio da floresta");
+    printf("\n2- Subir em uma árvore e dormir");
+    printf("\n3- Construir uma cabana improvisada");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha onde o personagem vai dormir no dia 2
+    
+    switch (escolha) //Escolha onde o personagem vai dormir no dia 2
+    {
+        case 1:
+            printf("Enquanto você se deitava para descansar no meio da densa floresta,\nescolhendo dormir ao relento, a escuridão da noite começava a envolvê-lo.\nO cansaço acumulado logo levou você a um sono profundo e tranquilo,\nalheio aos perigos que a escuridão da floresta poderia trazer.\nPorém, o destino tinha outros planos. No meio da noite, quando o silêncio\nda floresta era interrompido apenas pelo sussurro das folhas nas árvores,\num grupo de orcs se aproximou furtivamente. Com seus passos pesados e silenciosos\ncomo sombras, eles não perceberam sua presença, acabando pisoteando você.\nA tragédia aconteceu de forma rápida e silenciosa, interrompendo abruptamente sua jornada e matando você.");
+            printf("\n----------GAME OVER----------");
+            exit(0);//Morte
+            break;
+            
+        case 2:
+            printf("Você decide subir em uma árvore alta. Encontrando um galho robusto e seguro, \nvocê se acomoda e prepara-se para passar a noite na elevação da copa das árvores. \nO conforto relativo da posição elevada e a brisa noturna que balança suavemente os galhos\nacima de você contribuem para uma noite tranquila. As estrelas cintilam no céu noturno,\ne a lua lança sua luz suave sobre a floresta. O sono chega facilmente e você dorme profundamente,\nsem perturbações. A sensação de segurança proporcionada pela altura e o abrigo da árvore\npermitiram que você recarregasse suas energias com tranquilidade.");
+            break;
+            
+        case 3:
+            printf("Determinando que uma cabana improvisada seria o refúgio mais seguro para a noite na floresta,\nvocê começa a construção com os recursos limitados que encontra ao seu redor.\nNo entanto, durante o processo de construção, você inadvertidamente escolheu um local próximo\na um ninho de mosquitos venenosos. Enquanto trabalhava na cabana, esses insetos\nperigosos começaram a se agitar. Sem perceber imediatamente o perigo, você continua seu trabalho,\nmas logo começa a sentir picadas intensas e uma sensação de formigamento por todo o corpo.\nOs mosquitos venenosos atacam sem piedade, injetando seu veneno letal em sua corrente sanguínea. \nVocê perde 3 pontos de vida.");
+            vida=vida-3;
+            if (vida<=0)
+            {
+                printf("\n----------GAME OVER----------");
+                exit(0);//Morte
+            }
+            break;
+            
+        default:
+            printf("Escolha inválida\n");
+    }
+    //Fim do dia 2
+    
+    printf("\n\n____________________DIA 3____________________\n\n");
+    
+    printf("Depois de acordar, você continua a trilha em direção ao temido confronto com o Boss que assola a região.\n");
+    printf("A floresta gradualmente cede lugar a uma paisagem surpreendente. Diante de você, ergue-se uma cidade \ndecadente, envolta por montanhas íngremes que a cercam como sentinelas silenciosas.\n");
+    printf("As muralhas da cidade mostram sinais de envelhecimento e desgaste. As construções, \napesar de imponentes em tempos passados, exibem rachaduras e telhados desmoronados. \n");
+    
+    printf("\nDiante desse cenário melancólico, você se vê diante de uma escolha. O que você deseja fazer?");
+    printf("\n1- Tentar passar escalando as montanhas.");
+    printf("\n2- Passar por dentro da cidade.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha do caminho em que o personagem vai escolher
+    
+    switch (escolha) 
+    {
+        case 1:
+            montanha();
+            printf("\n----------GAME OVER----------");
+            exit(0); //Morte
+            break;
+                    
+        case 2:
+            break;
+                    
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+
+    
+    
+    
+    printf("Conforme você adentra a cidade decadente, o cenário desolado e as construções abandonadas ecoam a tristeza do lugar.\n");
+    
+    printf("\nEm meio à desolação, seus passos o conduzem a um beco estreito, onde um mendigo\nse encontra sentado sobre um pedaço de papelão, suas roupas rasgadas e sujas\ntestemunhando as dificuldades que enfrentou.");
+    printf("O mendigo, com um olhar cansado \ne sorriso amigável, segura um cântaro que emana um aroma convidativo. \nEle anuncia que a bebida é uma especialidade da região, preparada com \ningredientes locais e destilada com cuidado. ");
+    printf("Ele olha para você e oferece\na bebida por um preço modesto de 3 Grounds.\n \nO que você deseja fazer?\n");
+    printf("1- Comprar a bebida e tomar. (2 G$)\n");
+    printf("2- Ignorar ele e seguir o caminho.\n");
+    printf("Escolha: ");
+    scanf("%d", &escolha); //Escolha comprar ou não a bebida do mendigo
+    
+    
+    switch (escolha) //Escolha comprar ou não a bebida do mendigo
+    {
+        case 1:
+            if(moeda<2)
+                printf("Você não possui dinheiro suficiente.\n");
+            
+            else
+            {
+            comprar_bebida();
+            printf("\n----------GAME OVER----------");
+            exit(0); //Morte
+            }
+            break; 
+                    
+        case 2:
+         printf("A desconfiança e o instinto de autopreservação falam mais alto, e você opta \npor não se envolver em interações desconhecidas em um lugar tão sombrio.\n");
+            break;
+                    
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+    
+    printf("\nEnquanto atravessa as ruas silenciosas da cidade decadente, você vê uma que uma jovem vestida\ncom roupas simples e frágeis está sendo atacada por um meliante aparentemente desarmado.\n");
+    printf("A donzela, com os olhos arregalados de terror, tenta recuar, mas a proximidade do agressor\na mantém encurralada. Seus apelos de socorro ecoam pelas ruas vazias da cidade, mas não há ninguém por perto para ajudar.\n");
+    printf("\nNeste momento, você se vê diante de outra escolha crítica em sua jornada:");
+    printf("\n1- Ajudar o assaltante.");
+    printf("\n2- Ajudar a moça.\n");
+    printf("Escolha: ");
+    scanf("%d", &escolha); //Escolha ajudar a moça ou ajudar o bandido
+
+    switch (escolha) //Escolha ajudar a moça ou ajudar o bandido
+    {
+        case 1:
+           printf("Após decidir se unir ao assaltante no ataque à donzela, a situação toma um rumo desastroso...\n");
+            printf("Você e o assaltante são subjugidos por fazendeiros enfurecidos. ");
+            printf("A violência e a brutalidade dominam a cena,\ne sua jornada na era medieval chega a um fim sangrento e brutal.\n");
+            printf("\n----------GAME OVER----------");
+            exit(0); //Morte
+            break; 
+                    
+        case 2:
+            printf("Após intervir para ajudar a donzela, você recebe auxílio dos fazendeiros locais\npara subjugar o assaltante. ");
+            printf("A violência é contida, e a moça agradece com gratidão. \n");
+            printf("Juntos, vocês restauram a paz naquele canto da cidade decadente,\ne sua reputação ganha um toque de respeito e apreço entre os fazendeiros.\n");
+            break;
+                    
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+    
+    printf("\nApós o momento tenso com os fazendeiros, eles percebem que você veio com boas intenções, buscando \nauxiliar a donzela em perigo. Com essa compreensão,eles reconhecem que você é uma pessoa de princípios.\n");
+    printf("Com humildade, um dos fazendeiros se aproxima e estende a mão em um gesto de conciliação. Ele convida \nvocê a acompanhá-los até a casa de seu líder para discutir sobre a história da cidade e seus objetivos.\n \nVocê deseja aceitar o convite?");
+    printf("\n1- Sim.");
+    printf("\n2- Não, continuar a viagem.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //escolha aceitar ou não o convite dos fazendeiros
+       
+       switch (escolha) //escolha aceitar ou não o convite dos fazendeiros
+       {
+           case 1:
+                fazendeiros(&moeda, &pocao_vida, &loot_orc, &loot_slime, &espada); // Chama a função fazendeiros, que fala o que acontece com eles
+                break;
+       
+            case 2:
+                printf("Você recusa o convite do fazendeiro e decide continuar sua jornada. À medida que você segue \nadiante, as ruas silenciosas da cidade decadente revelam sua verdadeira natureza. A falta de \nvida e atividade nas ruas é substituída por uma sensação inquietante de isolamento. ");
+                printf("Você enfrenta \nos desafios iminentes por conta própria. O perigo e os mistérios espreitam em cada esquina.\n \nAté que, inesperadamente, um bando de ladrões que estava à espreita o aborda,\nlevando todos os seus pertences, deixando apenas as roupas que você vestia.\n");
+                printf("Porém, mesmo após o assalto, você continua determinado a atingir seu objetivo, então,\nvocê consegue sair da cidade, mas ainda precisa caminhar até o final das montanhas.\n");
+                //Perde todos os seus itens, menos o que está vestindo para os bandidos.
+                espada=0;
+                moeda=0;
+                pocao_vida=0;
+                loot_slime=0;
+                loot_orc=0;
+                break;
+                
+            default:
+                printf("Escolha inválida.\n");
+                break;
+    }
+       
+    printf("\nApós algumas horas de caminhada, à medida que você se distancia das montanhas e se prepara\npara entrar em uma floresta em alta altitude, a mudança na paisagem é evidente. A floresta\nse estende diante de você, abraçada pela altitude e pelo frio cortante. A sensação de ar\nrarefeito é notável, fazendo com que cada respiração pareça um esforço maior do que o normal.\n");
+    printf("\nCuidado, por conta da altura, a floresta está fria e com ar rarefeito.\nSeu personagem receberá status negativos de -1 de resistência a ataque e -1 de força.\n");
+    
+    //Efeitos do ar rarefeiro e frio da floresta em alta altitude
+    resistencia = resistencia - 1;
+    forca = forca - 1;
+
+    printf("\nA luz do dia começa a ceder diante da chegada iminente da noite. A mudança gradual de cores \nno céu anuncia o entardecer. À medida que a noite se aprofunda e a escuridão toma conta,\nvocê se conscientiza da necessidade de encontrar um lugar seguro para descansar \ne se abrigar das baixas temperaturas da noite.\n \nDiante dessa situação, como você vai passar a noite?");
+    printf("\n1- Subir em uma árvore e passar a noite.");
+    printf("\n2- Entrar em uma caverna próxima e fazer uma fogueira.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha como dormir no dia 3
+    
+    switch(escolha) //Escolha como dormir no dia 3
+    {
+        case 1:
+            printf("Com esforço, você escalou os galhos até encontrar um local seguro entre as folhagens.\n");
+            printf("Entretanto, à medida que a noite avançava e a temperatura continuava a cair, o frio\nse tornava implacável. As folhas que serviam de cobertura não eram suficientes para \nmanter o calor do corpo. ");
+            printf("Seu corpo tremia incontrolavelmente, e você lutava para \nse manter aquecido, mas o ambiente implacável cobrava seu preço. Seus membros ficaram \nrígidos e, com o passar das horas, a exaustão tomou conta. ");
+            printf("Finalmente, em meio à \nescuridão e ao frio cortante, seu corpo cedeu. A hipotermia se instalou, e você \nnão teve forças para resistir. Na solidão da floresta, sua vida se apagou, \ntornando-se mais uma história perdida na vastidão da era medieval.\n");
+            printf("\n----------GAME OVER----------");
+            exit(0); //Morte
+            break;
+        
+        case 2:
+            printf("Você tomou a decisão de buscar abrigo em uma caverna próxima, percebendo que o abrigo\nofereceria proteção contra o frio inclemente da noite na floresta em alta altitude. \nA entrada da caverna se revelou como um refúgio bem-vindo, proporcionando um lugar \nseguro para passar a noite. ");
+            printf("Com determinação, você preparou uma fogueira na entrada \nda caverna, usando galhos secos e pedras para criar o fogo. As chamas crepitantes \niluminaram o interior da caverna, afugentando a escuridão e aquecendo o ambiente. \nO calor acolhedor da fogueira trouxe conforto. ");
+            printf("Descansando junto ao fogo, você \npermitiu que seu corpo se aquecesse e se recuperasse do estresse do dia. ");
+            printf("Quando a primeira \nluz da manhã penetrou na caverna, você acordou revigorado e determinado a continuar sua jornada. \n");
+            break;
+            
+        default:
+            printf("Escolha inválida.\n");
+            break;
+    }
+    printf("\n\n____________________Dia 4____________________\n\n");
+    
+    printf("\nVocê adentrou na densa Floresta de Heinst, e a sensação que toma conta de você é a de que \na jornada está chegando ao seu ápice. Cada passo adiante é permeado pela expectativa e \npelo entendimento de que o confronto com o Dragão, que aterrorizou a região medieval, está próximo.");
+    printf("\nVocê se lembra de tudo o que enfrentou, das pessoas que conheceu e das escolhas que fez \nem sua jornada. O confronto com o Boss é a culminação de sua busca para trazer de volta a paz na região\n");
+    printf("\nEnquanto você avançava pela densa Floresta de Heinst, seu olhar perspicaz capturou uma placa de madeira \nenvelhecida escondida entre as árvores. Nela, palavras inquietantes estavam gravadas com letras \nrudimentares: Slimes nesta área.\n \nDiante disso, você deseja caçar os slimes?");
+    printf("\n1- Sim.");
+    printf("\n2- Não.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha deseja enfrentar slimes?
+    
+    switch(escolha)//Escolha deseja enfrentar slimes?
+    {
+        case 1:
+            tipoBatalha=1;
+            batalha(&pocao_vida , &vida, forca, espada, resistencia, vida_max, habilidade, tipoBatalha,&loot_slime, &loot_orc); //Chama a função Batalha
+            break;
+        case 2:
+        
+            printf("Decidindo não enfrentar os Slimes, você escolheu seguir adiante, avançando mais fundo na Floresta de Heinst.\n");
+            break;
+            
+        default:
+            printf("Escolha Inválida.\n");
+            break;
+    }    
+    
+    printf("\nÀ medida que você avançava pelas profundezas da Floresta de Heinst, a paisagem começava \na se transformar. As árvores, antes majestosas e exuberantes, agora exibiam marcas de escaramuças \ne a presença de criaturas hostis.");
+    printf(" Então, você viu algo, uma placa de madeira desgastada. Nela, \npalavras rústicas estavam gravadas com força e simplicidade: Orcs nesta área.\n \nDiante disso, você deseja caçar os Orcs?");
+  
+    printf("\n1- Sim.");
+    printf("\n2- Não.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //Escolha enfrentar Orc
+    
+    switch(escolha) //Escolha enfrentar Orc
+    {
+        case 1:
+            tipoBatalha=2;
+            batalha(&pocao_vida , &vida, forca, espada, resistencia, vida_max, habilidade, tipoBatalha,&loot_slime, &loot_orc); //Chama a função batalha
+            break;
+            
+        case 2:
+            printf("Optando por não enfrentar os Orcs, você continuou sua jornada pela Floresta de Heinst. \n");
+            break;
+            
+        default:
+            printf("\nEscolha Inválida.");
+            break;
+        
+    }
+    //Coloca de novo os efeitos perdidos por causa da floresta em alta altitude
+    resistencia = resistencia + 1;
+    forca= forca + 1;
+    
+    printf("\nCaminhando pela densa Floresta de Heinst, enquanto mantinha a guarda alta devido aos perigos que rondavam\na área, você teve uma surpresa inesperada. No meio da exuberante natureza, entre as árvores altas e a \npenumbra que caracterizava a floresta, avistou um vendedor ambulante.");
+    printf(" Ele estava lá, de pé ao lado de \nsua carroça modesta, repleto de uma variedade de mercadorias que brilhavam sob a luz filtrada pelas folhas.\n \nDiante dessa situação, você seja interagir com o comerciante ou seguir a viagem?");
+  
+    printf("\n1- Interagir com o comerciante.");
+    printf("\n2- Seguir viagem.");
+    printf("\nEscolha: ");
+    scanf("%d", &escolha); //escolha falar com comerciante
+    
+    switch(escolha) //escolha falar com comerciante
+    {
+        case 1:
+        
+            Loja(&moeda, &pocao_vida, &espada, &resistencia, &loot_slime, &loot_orc); //Chama a função de loja
+            break;
+        
+        case 2:
+            printf("Optando por não interagir com o comerciante ambulante na Floresta de Heinst,\nvocê prosseguiu sua viagem em direção ao confronto com o dragão.\n");
+            break;
+        
+        default:
+            printf("Escolha inválida.\n");
+    }
+    
+    printf("\nApós andar por mais algumas horas na Floresta de Heinst, você finalmente chegou ao que parecia \nser um grande covil protegido por uma misteriosa barreira mágica. Determinado e corajoso, você \nencontrou uma maneira de passar por essa barreira, deixando para trás a floresta gélida e o ar \nrarefeito. Uma vez dentro do covil, você percebeu que a temperatura era surpreendentemente \nagradável e aliviadora.");
+    printf(" A atmosfera acolhedora e o alívio dos efeitos debilitantes da alta altitude \nrenovaram suas forças e lhe deram uma sensação de preparação para o desafio iminente. Seu corpo \nestava pronto para enfrentar o confronto com o temido Dragão que aterrorizava a região.\n");
+    
+    printf("\nConforme você caminhava pelas entranhas do covil, a escuridão dava lugar a uma penumbra que revelava \na majestade oculta do local. Você se aproximou do coração do covil, onde a presença do Boss aguardava.");
+    printf("\nA batalha épica havia começado, e a era medieval testava sua coragem e habilidades. Seu destino \nestava em jogo, assim como o destino da região. Somente um emergiria como vencedor.");
+    
+    int vida_drag=63;
+    int dano_drag=11;
+    do //Batalha com o Dragão
+        {
+            if(vida<=0) //Caso o player morra, o jogo acaba.
+            {
+                printf("Você morreu. Foi apenas mais um que tentou derrotar o dragão.\nA região de Heimer continuará coberta por trevas. Você falhou.\n");
+                printf("__________Game Over__________");
+                exit(0);
+            }
+                
+            printf("\n//Dragão %d: hp=%d   //  aventureiro: hp=%d",i,vida_drag,vida);
+            printf("\n1- Ataque de espada");
+            printf("\n2- Ataque corpo a corpo");
+            printf("\n3- Usar poção de vida (%d)",pocao_vida);
+            printf("\nEscolha: ");
+            scanf("%d",&escolha); 
+            
+            if(escolha==1)
+            {
+                int dano=danoEspadas(espada); //chama a funcao do dano de espada.
+                if(dano!=0)
+                {
+                    vida_drag = vida_drag - (dano+habilidade); //retira a vida do Dragão.
+
+                    if(vida_drag>0) //se o Dragão não morrer com o ataque, o jogador leva dano do dragao.
+                        vida=vida - dano_drag + resistencia;
+                }
+            }
+            if(escolha==2)
+            {
+                vida_drag=vida_drag-forca; //dano corpo a corpo.
+                    
+                if(vida_drag>0) //se o Dragão não morrer com o ataque, o jogador leva dano do dragao.
+                    vida= vida - dano_drag + resistencia;
+                                     
+            }
+            if(escolha==3)
+            {
+                if(pocao_vida<=0) //Se o jogador nao tiver poção.
+                    printf("Você não possui poção de vida.\n");
+                
+                else //Jogador usa poção.
+                {
+                    vida = vida_max;
+                    pocao_vida = pocao_vida - 1;
+                }
+            }
+                
+        }while(vida_drag>0); //Quando o Drag morrer, acaba o loop
+    
+    printf("Voce venceu o dragão. Toda sua coragem e bravura foram postas em prova. Voce venceu \ne libertou o povo de heimer, e, para eles, você é um herói agora!");
+  
+
+
+
+    return 0;
+}
